@@ -1,0 +1,33 @@
+[
+  {
+    "id": "abc-123",
+    "text": "Staff Platform Engineer",
+    "hostedUrl": "https://jobs.lever.co/testco/abc-123",
+    "applyUrl": "https://jobs.lever.co/testco/abc-123/apply",
+    "createdAt": 1740412800000,
+    "categories": {
+      "location": "New York, NY",
+      "team": "Platform",
+      "commitment": "Full-time"
+    },
+    "descriptionPlain": "Join our platform team to build scalable infrastructure. Requirements: 7+ years experience, distributed systems expertise.",
+    "description": "<p>Join our platform team to build scalable infrastructure.</p>",
+    "lists": [
+      {
+        "text": "Requirements",
+        "content": "<li>7+ years experience</li><li>Distributed systems expertise</li>"
+      }
+    ]
+  },
+  {
+    "id": "def-456",
+    "text": "Data Analyst",
+    "hostedUrl": "https://jobs.lever.co/testco/def-456",
+    "applyUrl": null,
+    "createdAt": null,
+    "categories": {},
+    "descriptionPlain": "",
+    "description": "",
+    "lists": []
+  }
+]

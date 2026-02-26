@@ -1,0 +1,22 @@
+{
+  "jobs": [
+    {
+      "id": 12345,
+      "title": "Senior Backend Engineer",
+      "updated_at": "2026-02-24T10:00:00Z",
+      "absolute_url": "https://boards.greenhouse.io/testco/jobs/12345",
+      "location": {
+        "name": "San Francisco, CA"
+      },
+      "content": "<p>We are looking for a <strong>Senior Backend Engineer</strong> to join our team.</p><ul><li>5+ years experience</li><li>Python, Go, or Rust</li></ul>"
+    },
+    {
+      "id": 67890,
+      "title": "Frontend Developer",
+      "updated_at": null,
+      "absolute_url": null,
+      "location": null,
+      "content": ""
+    }
+  ]
+}

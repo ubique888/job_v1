@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+backend/.venv/
+backend/.pytest_cache/
+
+# Node
+frontend/node_modules/
+backend/node_modules/
+frontend/dist/
+
+# SQLite database (runtime data)
+backend/data/*.db
+backend/data/*.db-wal
+backend/data/*.db-shm
+
+# Environment variables
+.env
+.env.*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Claude Code local config
+.claude/
