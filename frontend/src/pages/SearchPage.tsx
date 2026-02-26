@@ -5,9 +5,35 @@ import type { Job, Seed, Track, PostedWithin, SearchRunResult } from "../lib/typ
 
 type SortKey = "company" | "title" | "location" | "posted_age_hours";
 type SortDir = "asc" | "desc";
+type LocationFilter = "All" | "New York" | "Seattle" | "Los Angeles" | "San Francisco" | "Boston" | "London" | "Paris" | "Remote" | "Other";
 
 const TRACKS: Track[] = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting"];
 const POSTED: PostedWithin[] = ["24h", "48h", "7d", "30d"];
+const LOCATIONS: LocationFilter[] = ["All", "New York", "Seattle", "Los Angeles", "San Francisco", "Boston", "London", "Paris", "Remote", "Other"];
+
+const LOCATION_PATTERNS: Record<string, string[]> = {
+  "New York": ["new york", "nyc", "brooklyn", "manhattan"],
+  "Seattle": ["seattle", "bellevue", "redmond"],
+  "Los Angeles": ["los angeles", "la,", "la ", "santa monica", "culver city", "venice, ca", "hollywood"],
+  "San Francisco": ["san francisco", "sf,", "sf ", "bay area", "palo alto", "mountain view", "sunnyvale", "san jose", "san mateo", "menlo park", "redwood city", "cupertino", "santa clara"],
+  "Boston": ["boston", "cambridge, ma", "somerville, ma", "waltham"],
+  "London": ["london"],
+  "Paris": ["paris"],
+  "Remote": ["remote"],
+};
+
+function matchesLocation(location: string | null, filter: LocationFilter): boolean {
+  if (filter === "All") return true;
+  const loc = (location || "").toLowerCase();
+  if (filter === "Other") {
+    // "Other" = doesn't match any named city or remote
+    return !Object.values(LOCATION_PATTERNS).some((patterns) =>
+      patterns.some((p) => loc.includes(p))
+    );
+  }
+  const patterns = LOCATION_PATTERNS[filter];
+  return patterns ? patterns.some((p) => loc.includes(p)) : false;
+}
 
 function formatAge(hours: number | null): string {
   if (hours === null) return "Unknown";
@@ -77,6 +103,9 @@ export default function SearchPage() {
   // Detail
   const [detail, setDetail] = useState<Job | null>(null);
 
+  // Location filter
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>("All");
+
   // Sort
   const [sortBy, setSortBy] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -114,6 +143,11 @@ export default function SearchPage() {
     });
   }, [jobs, sortBy, sortDir]);
 
+  const filteredJobs = useMemo(() => {
+    if (locationFilter === "All") return sortedJobs;
+    return sortedJobs.filter((job) => matchesLocation(job.location, locationFilter));
+  }, [sortedJobs, locationFilter]);
+
   // Load seeds on mount
   useEffect(() => {
     api.getSeeds().then(setSeeds).catch(() => {});
@@ -147,6 +181,7 @@ export default function SearchPage() {
     setResult(null);
     setSortBy(null);
     setSortDir("asc");
+    setLocationFilter("All");
     try {
       const { run_id } = await api.createSearchRun({
         track,
@@ -196,6 +231,15 @@ export default function SearchPage() {
           <select value={postedWithin} onChange={(e) => setPostedWithin(e.target.value as PostedWithin)}>
             {POSTED.map((p) => (
               <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label>Location</label>
+          <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value as LocationFilter)}>
+            {LOCATIONS.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
             ))}
           </select>
         </div>
@@ -342,7 +386,7 @@ export default function SearchPage() {
       )}
 
       {/* Results table */}
-      {jobs.length > 0 ? (
+      {filteredJobs.length > 0 ? (
         <div className="table-wrap">
           <table>
             <thead>
@@ -356,7 +400,7 @@ export default function SearchPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedJobs.map((job) => (
+              {filteredJobs.map((job) => (
                 <tr key={job.id}>
                   <td>{job.company}</td>
                   <td>
@@ -407,15 +451,22 @@ export default function SearchPage() {
           </table>
         </div>
       ) : (
-        !loading &&
-        !result && (
-          <div className="empty">
-            <p>
-              {hasSeeds
-                ? "Click Run Search to find jobs from your seeds."
-                : "Add at least one seed to get started."}
-            </p>
-          </div>
+        !loading && (
+          result ? (
+            jobs.length > 0 && locationFilter !== "All" ? (
+              <div className="empty">
+                <p>No jobs match the "{locationFilter}" location filter. Try "All" to see all {jobs.length} results.</p>
+              </div>
+            ) : null
+          ) : (
+            <div className="empty">
+              <p>
+                {hasSeeds
+                  ? "Click Run Search to find jobs from your seeds."
+                  : "Add at least one seed to get started."}
+              </p>
+            </div>
+          )
         )
       )}
 
