@@ -48,6 +48,12 @@ class QueueStatus(str, Enum):
     ARCHIVED = "archived"
 
 
+class ExperienceLevel(str, Enum):
+    INTERN = "intern"
+    ENTRY_LEVEL = "entry-level"
+    HIGHER_LEVEL = "higher-level"
+
+
 # --- Request / Response models ---
 
 class SeedCreate(BaseModel):
@@ -72,6 +78,7 @@ class ProfileUpdate(BaseModel):
     seniority: Optional[str] = None
     posted_within: Optional[PostedWithin] = None
     remote_only: Optional[bool] = None
+    discord_webhook_url: Optional[str] = None
 
 
 class ProfileResponse(BaseModel):
@@ -81,6 +88,7 @@ class ProfileResponse(BaseModel):
     seniority: Optional[str]
     posted_within: str
     remote_only: bool
+    discord_webhook_url: Optional[str] = None
     updated_at: str
 
 
@@ -109,6 +117,7 @@ class JobResponse(BaseModel):
     posted_age_hours: Optional[float]
     jd_raw_text: Optional[str]
     track: Optional[str]
+    experience_level: Optional[str] = None
     scrape_ts: str
     evidence: list[dict] = []
 
@@ -142,4 +151,43 @@ class QueueItemResponse(BaseModel):
     notes: str
     created_at: str
     updated_at: str
+    job: Optional[JobResponse] = None
+
+
+# --- Subscription / Alert models ---
+
+class SubscriptionCreate(BaseModel):
+    track: Track
+    experience_level: Optional[ExperienceLevel] = None
+    location_filter: Optional[str] = None
+    interval_minutes: int = Field(default=60, ge=15, le=1440)
+
+
+class SubscriptionUpdate(BaseModel):
+    track: Optional[Track] = None
+    experience_level: Optional[ExperienceLevel] = None
+    location_filter: Optional[str] = None
+    interval_minutes: Optional[int] = Field(default=None, ge=15, le=1440)
+    is_active: Optional[bool] = None
+
+
+class SubscriptionResponse(BaseModel):
+    id: str
+    track: str
+    experience_level: Optional[str]
+    location_filter: Optional[str]
+    is_active: bool
+    interval_minutes: int
+    last_checked_at: Optional[str]
+    created_at: str
+    updated_at: str
+    unread_count: int = 0
+
+
+class AlertResponse(BaseModel):
+    id: str
+    subscription_id: str
+    job_id: str
+    is_read: bool
+    created_at: str
     job: Optional[JobResponse] = None

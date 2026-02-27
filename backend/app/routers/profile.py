@@ -1,12 +1,17 @@
 import json
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from ..database import get_connection
+from ..discord_notifier import send_test_message
 from ..models.schemas import ProfileResponse, ProfileUpdate
 
 router = APIRouter(prefix="/v1/user", tags=["profile"])
+
+
+def _row_to_response(row) -> dict:
+    return dict(row) | {"remote_only": bool(row["remote_only"])}
 
 
 @router.get("/profile", response_model=ProfileResponse)
@@ -14,7 +19,7 @@ def get_profile():
     conn = get_connection()
     row = conn.execute("SELECT * FROM user_profile WHERE user_id = 'default'").fetchone()
     conn.close()
-    return dict(row) | {"remote_only": bool(row["remote_only"])}
+    return _row_to_response(row)
 
 
 @router.put("/profile", response_model=ProfileResponse)
@@ -38,6 +43,10 @@ def update_profile(body: ProfileUpdate):
     if body.remote_only is not None:
         updates.append("remote_only = ?")
         params.append(int(body.remote_only))
+    if body.discord_webhook_url is not None:
+        updates.append("discord_webhook_url = ?")
+        # Allow clearing by sending empty string
+        params.append(body.discord_webhook_url if body.discord_webhook_url else None)
 
     if updates:
         updates.append("updated_at = ?")
@@ -51,4 +60,24 @@ def update_profile(body: ProfileUpdate):
 
     row = conn.execute("SELECT * FROM user_profile WHERE user_id = 'default'").fetchone()
     conn.close()
-    return dict(row) | {"remote_only": bool(row["remote_only"])}
+    return _row_to_response(row)
+
+
+@router.post("/profile/test-discord")
+async def test_discord_webhook():
+    """Send a test message to the configured Discord webhook."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT discord_webhook_url FROM user_profile WHERE user_id = 'default'"
+    ).fetchone()
+    conn.close()
+
+    url = row["discord_webhook_url"] if row else None
+    if not url:
+        raise HTTPException(status_code=400, detail="No Discord webhook URL configured")
+
+    success = await send_test_message(url)
+    if not success:
+        raise HTTPException(status_code=502, detail="Failed to send test message to Discord")
+
+    return {"status": "ok", "message": "Test message sent to Discord"}

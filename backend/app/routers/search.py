@@ -94,6 +94,7 @@ def get_search_run(run_id: str):
                 posted_age_hours=j["posted_age_hours"],
                 jd_raw_text=j["jd_raw_text"],
                 track=j["track"],
+                experience_level=j["experience_level"],
                 scrape_ts=j["scrape_ts"],
                 evidence=[{"type": e["evidence_type"], "text": e["text"]} for e in evidence],
             )

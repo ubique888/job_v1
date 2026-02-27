@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as api from "../lib/api";
 import { CATEGORIES, DEFAULT_SEEDS, getBoardUrl } from "../lib/defaultSeeds";
-import type { Job, Seed, Track, PostedWithin, SearchRunResult } from "../lib/types";
+import type { Job, Seed, Track, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
 
 type SortKey = "company" | "title" | "location" | "posted_age_hours";
 type SortDir = "asc" | "desc";
 type LocationFilter = "All" | "New York" | "Seattle" | "Los Angeles" | "San Francisco" | "Boston" | "London" | "Paris" | "Remote" | "Other";
+type LevelFilter = "All" | ExperienceLevel;
 
 const TRACKS: Track[] = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting"];
 const POSTED: PostedWithin[] = ["24h", "48h", "7d", "30d"];
@@ -106,6 +107,9 @@ export default function SearchPage() {
   // Location filter
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("All");
 
+  // Level filter
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>("All");
+
   // Sort
   const [sortBy, setSortBy] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -144,9 +148,15 @@ export default function SearchPage() {
   }, [jobs, sortBy, sortDir]);
 
   const filteredJobs = useMemo(() => {
-    if (locationFilter === "All") return sortedJobs;
-    return sortedJobs.filter((job) => matchesLocation(job.location, locationFilter));
-  }, [sortedJobs, locationFilter]);
+    let result = sortedJobs;
+    if (locationFilter !== "All") {
+      result = result.filter((job) => matchesLocation(job.location, locationFilter));
+    }
+    if (levelFilter !== "All") {
+      result = result.filter((job) => job.experience_level === levelFilter);
+    }
+    return result;
+  }, [sortedJobs, locationFilter, levelFilter]);
 
   // Load seeds on mount
   useEffect(() => {
@@ -182,6 +192,7 @@ export default function SearchPage() {
     setSortBy(null);
     setSortDir("asc");
     setLocationFilter("All");
+    setLevelFilter("All");
     try {
       const { run_id } = await api.createSearchRun({
         track,
@@ -241,6 +252,16 @@ export default function SearchPage() {
             {LOCATIONS.map((loc) => (
               <option key={loc} value={loc}>{loc}</option>
             ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label>Level</label>
+          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value as LevelFilter)}>
+            <option value="All">All</option>
+            <option value="intern">Intern</option>
+            <option value="entry-level">Entry Level</option>
+            <option value="higher-level">Higher Level</option>
           </select>
         </div>
 
@@ -395,6 +416,7 @@ export default function SearchPage() {
                 <th className="sortable" onClick={() => toggleSort("title")}>Role{sortIndicator("title")}</th>
                 <th className="sortable" onClick={() => toggleSort("location")}>Location{sortIndicator("location")}</th>
                 <th className="sortable" onClick={() => toggleSort("posted_age_hours")}>Posted{sortIndicator("posted_age_hours")}</th>
+                <th>Level</th>
                 <th>Apply Link</th>
                 <th>Actions</th>
               </tr>
@@ -416,6 +438,11 @@ export default function SearchPage() {
                   </td>
                   <td>{job.location || "—"}</td>
                   <td>{formatAge(job.posted_age_hours)}</td>
+                  <td>
+                    <span className={`badge badge-level-${job.experience_level || "entry-level"}`}>
+                      {job.experience_level || "entry-level"}
+                    </span>
+                  </td>
                   <td>
                     {job.apply_url ? (
                       <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
@@ -453,9 +480,9 @@ export default function SearchPage() {
       ) : (
         !loading && (
           result ? (
-            jobs.length > 0 && locationFilter !== "All" ? (
+            jobs.length > 0 && (locationFilter !== "All" || levelFilter !== "All") ? (
               <div className="empty">
-                <p>No jobs match the "{locationFilter}" location filter. Try "All" to see all {jobs.length} results.</p>
+                <p>No jobs match the current filters. Try setting Location and Level to "All" to see all {jobs.length} results.</p>
               </div>
             ) : null
           ) : (

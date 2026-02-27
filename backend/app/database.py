@@ -14,9 +14,23 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+def _migrate_db(conn: sqlite3.Connection):
+    """Run incremental migrations. Safe to call repeatedly."""
+    job_cols = {row[1] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+    if "experience_level" not in job_cols:
+        conn.execute("ALTER TABLE jobs ADD COLUMN experience_level TEXT DEFAULT 'entry-level'")
+        conn.commit()
+
+    profile_cols = {row[1] for row in conn.execute("PRAGMA table_info(user_profile)").fetchall()}
+    if "discord_webhook_url" not in profile_cols:
+        conn.execute("ALTER TABLE user_profile ADD COLUMN discord_webhook_url TEXT")
+        conn.commit()
+
+
 def init_db():
     conn = get_connection()
     conn.executescript(SCHEMA)
+    _migrate_db(conn)
     conn.close()
 
 
@@ -28,6 +42,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
     seniority TEXT,
     posted_within TEXT DEFAULT '7d',
     remote_only INTEGER DEFAULT 0,
+    discord_webhook_url TEXT,
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -67,6 +82,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     jd_raw_text TEXT,
     jd_hash TEXT,
     track TEXT,
+    experience_level TEXT DEFAULT 'entry-level',
     scrape_ts TEXT DEFAULT (datetime('now')),
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY(run_id) REFERENCES search_runs(id)
@@ -101,6 +117,33 @@ CREATE TABLE IF NOT EXISTS queue_items (
     updated_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY(job_id) REFERENCES jobs(id)
 );
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT DEFAULT 'default',
+    track TEXT NOT NULL,
+    experience_level TEXT,
+    location_filter TEXT,
+    is_active INTEGER DEFAULT 1,
+    interval_minutes INTEGER DEFAULT 60,
+    last_checked_at TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT DEFAULT 'default',
+    subscription_id TEXT NOT NULL,
+    job_id TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY(subscription_id) REFERENCES subscriptions(id),
+    FOREIGN KEY(job_id) REFERENCES jobs(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_alerts_sub_job
+    ON alerts(subscription_id, job_id);
 
 INSERT OR IGNORE INTO user_profile (user_id) VALUES ('default');
 """

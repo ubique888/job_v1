@@ -10,6 +10,7 @@ from .models.schemas import POSTED_WITHIN_HOURS, PostedWithin
 from .providers.base import JobCard
 from .providers.greenhouse import GreenhouseProvider
 from .providers.lever import LeverProvider
+from .level_classifier import classify_level
 from .track_matcher import matches_track
 
 PROVIDERS = {
@@ -93,12 +94,13 @@ async def execute_search_run(
             continue
 
         job_id = str(uuid.uuid4())
+        experience_level = classify_level(card.title, card.jd_raw_text)
 
         conn.execute(
             """INSERT INTO jobs (id, user_id, run_id, company, title, location, platform,
                source_url, apply_url, apply_url_status, posted_date, posted_age_hours,
-               jd_raw_text, jd_hash, track, scrape_ts)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               jd_raw_text, jd_hash, track, experience_level, scrape_ts)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 job_id, user_id, run_id, card.company, card.title, card.location,
                 card.platform, card.source_url, card.apply_url, card.apply_url_status,
@@ -106,6 +108,7 @@ async def execute_search_run(
                 card.jd_raw_text,
                 None,  # jd_hash
                 track,
+                experience_level,
                 datetime.now(timezone.utc).isoformat(),
             ),
         )

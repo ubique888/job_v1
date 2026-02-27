@@ -21,7 +21,7 @@ def list_queue_items():
     rows = conn.execute(
         """SELECT qi.*, j.company, j.title, j.location, j.platform, j.source_url,
                   j.apply_url, j.apply_url_status, j.posted_date, j.posted_age_hours,
-                  j.jd_raw_text, j.track, j.scrape_ts
+                  j.jd_raw_text, j.track, j.experience_level, j.scrape_ts
            FROM queue_items qi
            JOIN jobs j ON qi.job_id = j.id
            WHERE qi.user_id = 'default'
@@ -44,6 +44,7 @@ def list_queue_items():
             posted_age_hours=r["posted_age_hours"],
             jd_raw_text=r["jd_raw_text"],
             track=r["track"],
+            experience_level=r["experience_level"],
             scrape_ts=r["scrape_ts"],
             evidence=[],
         )
@@ -92,7 +93,7 @@ def create_queue_item(body: QueueItemCreate):
     row = conn.execute(
         """SELECT qi.*, j.company, j.title, j.location, j.platform, j.source_url,
                   j.apply_url, j.apply_url_status, j.posted_date, j.posted_age_hours,
-                  j.jd_raw_text, j.track, j.scrape_ts
+                  j.jd_raw_text, j.track, j.experience_level, j.scrape_ts
            FROM queue_items qi
            JOIN jobs j ON qi.job_id = j.id
            WHERE qi.id = ?""",
@@ -106,7 +107,7 @@ def create_queue_item(body: QueueItemCreate):
         source_url=row["source_url"], apply_url=row["apply_url"],
         apply_url_status=row["apply_url_status"], posted_date=row["posted_date"],
         posted_age_hours=row["posted_age_hours"], jd_raw_text=row["jd_raw_text"],
-        track=row["track"], scrape_ts=row["scrape_ts"], evidence=[],
+        track=row["track"], experience_level=row["experience_level"], scrape_ts=row["scrape_ts"], evidence=[],
     )
     return QueueItemResponse(
         id=row["id"], job_id=row["job_id"], status=row["status"],
@@ -146,7 +147,7 @@ def update_queue_item(item_id: str, body: QueueItemUpdate):
     row = conn.execute(
         """SELECT qi.*, j.company, j.title, j.location, j.platform, j.source_url,
                   j.apply_url, j.apply_url_status, j.posted_date, j.posted_age_hours,
-                  j.jd_raw_text, j.track, j.scrape_ts
+                  j.jd_raw_text, j.track, j.experience_level, j.scrape_ts
            FROM queue_items qi
            JOIN jobs j ON qi.job_id = j.id
            WHERE qi.id = ?""",
@@ -160,7 +161,7 @@ def update_queue_item(item_id: str, body: QueueItemUpdate):
         source_url=row["source_url"], apply_url=row["apply_url"],
         apply_url_status=row["apply_url_status"], posted_date=row["posted_date"],
         posted_age_hours=row["posted_age_hours"], jd_raw_text=row["jd_raw_text"],
-        track=row["track"], scrape_ts=row["scrape_ts"], evidence=[],
+        track=row["track"], experience_level=row["experience_level"], scrape_ts=row["scrape_ts"], evidence=[],
     )
     return QueueItemResponse(
         id=row["id"], job_id=row["job_id"], status=row["status"],

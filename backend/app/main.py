@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,18 +6,28 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
 from .routers import profile, queue, search, seeds
+from .routers.subscriptions import alerts_router, router as subscriptions_router
+from .subscription_checker import run_subscription_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    # Start background subscription checker
+    task = asyncio.create_task(run_subscription_loop())
     yield
+    # Cancel on shutdown
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
     title="Job Search Autopilot",
-    version="0.1.0",
-    description="Find real jobs from public ATS boards. No auto-apply.",
+    version="0.2.0",
+    description="Find real jobs from public ATS boards. Now with alerts.",
     lifespan=lifespan,
 )
 
@@ -32,6 +43,8 @@ app.include_router(profile.router)
 app.include_router(seeds.router)
 app.include_router(search.router)
 app.include_router(queue.router)
+app.include_router(subscriptions_router)
+app.include_router(alerts_router)
 
 
 @app.get("/health")
