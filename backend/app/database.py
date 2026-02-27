@@ -30,6 +30,23 @@ def _migrate_db(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE user_profile ADD COLUMN discord_webhook_url TEXT")
         conn.commit()
 
+    # Ensure job_summaries table exists (for existing databases)
+    existing_tables = {row[0] for row in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    ).fetchall()}
+    if "job_summaries" not in existing_tables:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS job_summaries (
+                id TEXT PRIMARY KEY,
+                job_id TEXT NOT NULL UNIQUE,
+                summary_text TEXT NOT NULL,
+                model_name TEXT NOT NULL DEFAULT 'llama3.2:3b',
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY(job_id) REFERENCES jobs(id)
+            )
+        """)
+        conn.commit()
+
 
 def init_db():
     conn = get_connection()
@@ -149,6 +166,15 @@ CREATE TABLE IF NOT EXISTS alerts (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_alerts_sub_job
     ON alerts(subscription_id, job_id);
+
+CREATE TABLE IF NOT EXISTS job_summaries (
+    id TEXT PRIMARY KEY,
+    job_id TEXT NOT NULL UNIQUE,
+    summary_text TEXT NOT NULL,
+    model_name TEXT NOT NULL DEFAULT 'llama3.2:3b',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY(job_id) REFERENCES jobs(id)
+);
 
 INSERT OR IGNORE INTO user_profile (user_id) VALUES ('default');
 """

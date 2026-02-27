@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as api from "../lib/api";
 import { CATEGORIES, DEFAULT_SEEDS, getBoardUrl } from "../lib/defaultSeeds";
-import type { Job, Seed, Track, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
+import type { Job, JobSummary, Seed, Track, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
 
 type SortKey = "company" | "title" | "location" | "posted_age_hours";
 type SortDir = "asc" | "desc";
@@ -106,6 +106,11 @@ export default function SearchPage() {
 
   // Inline preview
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+
+  // Summary state
+  const [summaries, setSummaries] = useState<Record<string, JobSummary>>({});
+  const [summarizing, setSummarizing] = useState<Set<string>>(new Set());
+  const [summaryErrors, setSummaryErrors] = useState<Record<string, string>>({});
 
   // Location filter
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("All");
@@ -218,6 +223,34 @@ export default function SearchPage() {
       await api.addToQueue(jobId);
     } catch (e: any) {
       if (!e.message.includes("409")) setError(e.message);
+    }
+  }, []);
+
+  const handleSummarize = useCallback(async (jobId: string) => {
+    setSummarizing((prev) => new Set(prev).add(jobId));
+    setSummaryErrors((prev) => {
+      const next = { ...prev };
+      delete next[jobId];
+      return next;
+    });
+    try {
+      const summary = await api.createJobSummary(jobId);
+      setSummaries((prev) => ({ ...prev, [jobId]: summary }));
+    } catch (e: any) {
+      if (e.message.includes("503")) {
+        setSummaryErrors((prev) => ({
+          ...prev,
+          [jobId]: "Summarizer unavailable — Ollama may not be running",
+        }));
+      } else {
+        setSummaryErrors((prev) => ({ ...prev, [jobId]: e.message }));
+      }
+    } finally {
+      setSummarizing((prev) => {
+        const next = new Set(prev);
+        next.delete(jobId);
+        return next;
+      });
     }
   }, []);
 
@@ -439,7 +472,14 @@ export default function SearchPage() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            setExpandedJob(isExpanded ? null : job.id);
+                            const newExpanded = isExpanded ? null : job.id;
+                            setExpandedJob(newExpanded);
+                            // Eagerly load cached summary when expanding
+                            if (newExpanded && !summaries[job.id] && !summarizing.has(job.id)) {
+                              api.getJobSummary(job.id)
+                                .then((s) => setSummaries((prev) => ({ ...prev, [job.id]: s })))
+                                .catch(() => {}); // 404 = no cached summary yet
+                            }
                           }}
                           className={isExpanded ? "role-link-active" : ""}
                         >
@@ -498,12 +538,39 @@ export default function SearchPage() {
                               {job.yoe_min !== null && <span>{job.yoe_min}+ yrs exp</span>}
                               <span>{formatAge(job.posted_age_hours)}</span>
                             </div>
-                            {previewText ? (
-                              <div className="jd-preview-text">{previewText}</div>
+                            {summaries[job.id] ? (
+                              <div className="jd-summary-text">{summaries[job.id].summary_text}</div>
+                            ) : previewText ? (
+                              <>
+                                <div className="jd-preview-text">{previewText}</div>
+                                {summaryErrors[job.id] && (
+                                  <p style={{ color: "#f85149", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
+                                    {summaryErrors[job.id]}
+                                  </p>
+                                )}
+                              </>
                             ) : (
                               <p style={{ color: "#8b949e", fontSize: "0.85rem" }}>No job description available.</p>
                             )}
                             <div className="jd-preview-actions">
+                              {previewText && !summaries[job.id] && (
+                                <button
+                                  className="btn-primary btn-sm"
+                                  disabled={summarizing.has(job.id)}
+                                  onClick={() => handleSummarize(job.id)}
+                                >
+                                  {summarizing.has(job.id) ? (
+                                    <><span className="spinner" /> Summarizing...</>
+                                  ) : (
+                                    "Summarize"
+                                  )}
+                                </button>
+                              )}
+                              {summaries[job.id] && (
+                                <span style={{ fontSize: "0.75rem", color: "#8b949e", display: "flex", alignItems: "center" }}>
+                                  Summarized by {summaries[job.id].model_name}
+                                </span>
+                              )}
                               <button
                                 className="btn-secondary btn-sm"
                                 onClick={() => setDetail(job)}

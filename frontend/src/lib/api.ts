@@ -106,3 +106,15 @@ export const testDiscordWebhook = () =>
   request<{ status: string; message: string }>("/v1/user/profile/test-discord", {
     method: "POST",
   });
+
+// Summaries
+export const getJobSummary = (jobId: string) =>
+  request<import("./types").JobSummary>(`/v1/jobs/${jobId}/summary`);
+
+export const createJobSummary = (jobId: string) =>
+  request<import("./types").JobSummary>(`/v1/jobs/${jobId}/summary`, {
+    method: "POST",
+  });
+
+export const getSummarizerHealth = () =>
+  request<{ available: boolean; model: string }>("/v1/jobs/summarizer/health");

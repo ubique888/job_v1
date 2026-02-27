@@ -79,3 +79,10 @@ export interface Alert {
   created_at: string;
   job: Job | null;
 }
+
+export interface JobSummary {
+  job_id: string;
+  summary_text: string;
+  model_name: string;
+  created_at: string;
+}

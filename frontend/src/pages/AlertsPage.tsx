@@ -3,7 +3,6 @@ import * as api from "../lib/api";
 import type { Subscription, Alert, Job, Track, ExperienceLevel } from "../lib/types";
 
 const TRACKS: Track[] = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting"];
-const LEVELS: (ExperienceLevel | "")[] = ["", "intern", "entry-level", "higher-level"];
 const LOCATIONS = ["", "New York", "Seattle", "Los Angeles", "San Francisco", "Boston", "London", "Paris", "Remote", "Other"];
 const INTERVALS = [
   { label: "15 min", value: 15 },

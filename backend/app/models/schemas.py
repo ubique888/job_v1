@@ -192,3 +192,10 @@ class AlertResponse(BaseModel):
     is_read: bool
     created_at: str
     job: Optional[JobResponse] = None
+
+
+class SummaryResponse(BaseModel):
+    job_id: str
+    summary_text: str
+    model_name: str
+    created_at: str
