@@ -21,6 +21,10 @@ def _migrate_db(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE jobs ADD COLUMN experience_level TEXT DEFAULT 'entry-level'")
         conn.commit()
 
+    if "yoe_min" not in job_cols:
+        conn.execute("ALTER TABLE jobs ADD COLUMN yoe_min INTEGER")
+        conn.commit()
+
     profile_cols = {row[1] for row in conn.execute("PRAGMA table_info(user_profile)").fetchall()}
     if "discord_webhook_url" not in profile_cols:
         conn.execute("ALTER TABLE user_profile ADD COLUMN discord_webhook_url TEXT")
@@ -83,6 +87,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     jd_hash TEXT,
     track TEXT,
     experience_level TEXT DEFAULT 'entry-level',
+    yoe_min INTEGER,
     scrape_ts TEXT DEFAULT (datetime('now')),
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY(run_id) REFERENCES search_runs(id)

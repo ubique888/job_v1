@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as api from "../lib/api";
 import { CATEGORIES, DEFAULT_SEEDS, getBoardUrl } from "../lib/defaultSeeds";
 import type { Job, Seed, Track, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
@@ -103,6 +103,9 @@ export default function SearchPage() {
 
   // Detail
   const [detail, setDetail] = useState<Job | null>(null);
+
+  // Inline preview
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   // Location filter
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("All");
@@ -417,63 +420,121 @@ export default function SearchPage() {
                 <th className="sortable" onClick={() => toggleSort("location")}>Location{sortIndicator("location")}</th>
                 <th className="sortable" onClick={() => toggleSort("posted_age_hours")}>Posted{sortIndicator("posted_age_hours")}</th>
                 <th>Level</th>
+                <th>YOE</th>
                 <th>Apply Link</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredJobs.map((job) => (
-                <tr key={job.id}>
-                  <td>{job.company}</td>
-                  <td>
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setDetail(job);
-                      }}
-                    >
-                      {job.title}
-                    </a>
-                  </td>
-                  <td>{job.location || "—"}</td>
-                  <td>{formatAge(job.posted_age_hours)}</td>
-                  <td>
-                    <span className={`badge badge-level-${job.experience_level || "entry-level"}`}>
-                      {job.experience_level || "entry-level"}
-                    </span>
-                  </td>
-                  <td>
-                    {job.apply_url ? (
-                      <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
-                        Apply <span className={`badge badge-${job.apply_url_status}`}>{job.apply_url_status}</span>
-                      </a>
-                    ) : (
-                      <span className="badge badge-unknown">unknown</span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ display: "flex", gap: "0.3rem" }}>
-                      {job.apply_url && (
-                        <button
-                          className="btn-secondary btn-sm"
-                          onClick={() => copyLink(job.apply_url!)}
-                          title="Copy apply link"
+              {filteredJobs.map((job) => {
+                const isExpanded = expandedJob === job.id;
+                const jdText = job.jd_raw_text || "";
+                const previewText = jdText.length > 500 ? jdText.slice(0, 500) + "..." : jdText;
+                return (
+                  <React.Fragment key={job.id}>
+                    <tr className={isExpanded ? "row-expanded" : ""}>
+                      <td>{job.company}</td>
+                      <td>
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setExpandedJob(isExpanded ? null : job.id);
+                          }}
+                          className={isExpanded ? "role-link-active" : ""}
                         >
-                          Copy
-                        </button>
-                      )}
-                      <button
-                        className="btn-secondary btn-sm"
-                        onClick={() => addToQueue(job.id)}
-                        title="Add to queue"
-                      >
-                        + Queue
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                          {job.title}
+                        </a>
+                      </td>
+                      <td>{job.location || "—"}</td>
+                      <td>{formatAge(job.posted_age_hours)}</td>
+                      <td>
+                        <span className={`badge badge-level-${job.experience_level || "entry-level"}`}>
+                          {job.experience_level || "entry-level"}
+                        </span>
+                      </td>
+                      <td>{job.yoe_min !== null ? `${job.yoe_min}+` : "—"}</td>
+                      <td>
+                        {job.apply_url ? (
+                          <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
+                            Apply <span className={`badge badge-${job.apply_url_status}`}>{job.apply_url_status}</span>
+                          </a>
+                        ) : (
+                          <span className="badge badge-unknown">unknown</span>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "0.3rem" }}>
+                          {job.apply_url && (
+                            <button
+                              className="btn-secondary btn-sm"
+                              onClick={() => copyLink(job.apply_url!)}
+                              title="Copy apply link"
+                            >
+                              Copy
+                            </button>
+                          )}
+                          <button
+                            className="btn-secondary btn-sm"
+                            onClick={() => addToQueue(job.id)}
+                            title="Add to queue"
+                          >
+                            + Queue
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="jd-preview-row">
+                        <td colSpan={8}>
+                          <div className="jd-preview-content">
+                            <div className="jd-preview-meta">
+                              <span>{job.company}</span>
+                              <span>{job.location || "No location"}</span>
+                              <span>{job.platform}</span>
+                              <span className={`badge badge-level-${job.experience_level || "entry-level"}`}>
+                                {job.experience_level || "entry-level"}
+                              </span>
+                              {job.yoe_min !== null && <span>{job.yoe_min}+ yrs exp</span>}
+                              <span>{formatAge(job.posted_age_hours)}</span>
+                            </div>
+                            {previewText ? (
+                              <div className="jd-preview-text">{previewText}</div>
+                            ) : (
+                              <p style={{ color: "#8b949e", fontSize: "0.85rem" }}>No job description available.</p>
+                            )}
+                            <div className="jd-preview-actions">
+                              <button
+                                className="btn-secondary btn-sm"
+                                onClick={() => setDetail(job)}
+                              >
+                                Full Details
+                              </button>
+                              {job.apply_url && (
+                                <a
+                                  href={job.apply_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn-primary btn-sm"
+                                  style={{ textDecoration: "none" }}
+                                >
+                                  Apply
+                                </a>
+                              )}
+                              <button
+                                className="btn-secondary btn-sm"
+                                onClick={() => addToQueue(job.id)}
+                              >
+                                + Queue
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -511,6 +572,9 @@ export default function SearchPage() {
               <span>{detail.location || "No location"}</span>
               <span>{detail.platform}</span>
               <span>{formatAge(detail.posted_age_hours)}</span>
+              {detail.yoe_min !== null && (
+                <span>{detail.yoe_min}+ years experience</span>
+              )}
             </div>
             {detail.apply_url && (
               <p style={{ marginBottom: "1rem" }}>

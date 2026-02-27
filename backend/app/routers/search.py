@@ -95,6 +95,7 @@ def get_search_run(run_id: str):
                 jd_raw_text=j["jd_raw_text"],
                 track=j["track"],
                 experience_level=j["experience_level"],
+                yoe_min=j["yoe_min"],
                 scrape_ts=j["scrape_ts"],
                 evidence=[{"type": e["evidence_type"], "text": e["text"]} for e in evidence],
             )

@@ -94,13 +94,13 @@ async def execute_search_run(
             continue
 
         job_id = str(uuid.uuid4())
-        experience_level = classify_level(card.title, card.jd_raw_text)
+        experience_level, yoe_min = classify_level(card.title, card.jd_raw_text)
 
         conn.execute(
             """INSERT INTO jobs (id, user_id, run_id, company, title, location, platform,
                source_url, apply_url, apply_url_status, posted_date, posted_age_hours,
-               jd_raw_text, jd_hash, track, experience_level, scrape_ts)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               jd_raw_text, jd_hash, track, experience_level, yoe_min, scrape_ts)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 job_id, user_id, run_id, card.company, card.title, card.location,
                 card.platform, card.source_url, card.apply_url, card.apply_url_status,
@@ -109,6 +109,7 @@ async def execute_search_run(
                 None,  # jd_hash
                 track,
                 experience_level,
+                yoe_min,
                 datetime.now(timezone.utc).isoformat(),
             ),
         )

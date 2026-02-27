@@ -118,6 +118,7 @@ class JobResponse(BaseModel):
     jd_raw_text: Optional[str]
     track: Optional[str]
     experience_level: Optional[str] = None
+    yoe_min: Optional[int] = None
     scrape_ts: str
     evidence: list[dict] = []
 

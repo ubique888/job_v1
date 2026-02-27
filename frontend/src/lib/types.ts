@@ -32,6 +32,7 @@ export interface Job {
   jd_raw_text: string | null;
   track: string | null;
   experience_level: ExperienceLevel | null;
+  yoe_min: number | null;
   scrape_ts: string;
   evidence: Evidence[];
 }
