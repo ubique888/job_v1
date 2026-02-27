@@ -1,95 +1,113 @@
+<div align="center">
+
 # Job Search Autopilot
 
-A full-stack job discovery dashboard that aggregates software engineering roles from public ATS (Applicant Tracking System) boards. Searches Greenhouse and Lever APIs to surface real, verified job listings — no scraping, no auto-apply.
+### A full-stack job discovery dashboard powered by local AI
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?logo=fastapi&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Ollama](https://img.shields.io/badge/Ollama-llama3.2:3b-000000?logo=ollama&logoColor=white)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Ollama](https://img.shields.io/badge/Ollama-llama3.2-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.com)
+[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
+[![Pydantic](https://img.shields.io/badge/Pydantic-2.5-E92063?style=for-the-badge&logo=pydantic&logoColor=white)](https://docs.pydantic.dev)
+[![Discord](https://img.shields.io/badge/Discord-Webhooks-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com)
+[![nginx](https://img.shields.io/badge/nginx-Alpine-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org)
 
----
-
-## AI-Powered JD Summarization
-
-Summarize job descriptions into structured key points using a local LLM — no API keys, no cloud costs.
-
-**How it works:** Click the **Summarize** button on any expanded job listing. The app sends the raw JD text to a locally running Ollama instance with `llama3.2:3b`, which returns a structured breakdown:
-
-- **Responsibilities** — 3-5 bullet points of key duties
-- **Required Skills** — must-have technologies, tools, languages
-- **Nice-to-Have** — preferred/bonus skills
-- **Experience Level** — inferred seniority and years
-- **Compensation** — salary range if mentioned
-- **Notable** — red flags, unusual requirements, or standout perks
-
-Summaries are cached in SQLite so each job is only processed once. Subsequent views load instantly.
-
-### Setup
-
-**With Docker (automatic):**
-
-Ollama is included as a Docker Compose service. Run `docker compose up` and the model downloads automatically on first boot. No extra steps.
-
-**Without Docker (local):**
-
-1. Install Ollama from [ollama.com](https://ollama.com)
-2. Pull the model:
-   ```bash
-   ollama pull llama3.2:3b
-   ```
-3. Keep Ollama running in the background (it starts automatically after install)
-4. Start the app normally — the Summarize button appears when Ollama is detected
-
-If Ollama is not running, the app works normally without summarization. The Summarize button shows an error message and the raw JD text remains visible.
+Aggregates software engineering roles from public ATS boards (Greenhouse & Lever).<br>
+Summarizes job descriptions with a local LLM. Sends alerts to Discord.<br>
+**No scraping. No auto-apply. No API keys required.**
 
 ---
 
-## Discord Webhook Notifications
+[English](#english) | [中文](#中文) | [日本語](#日本語) | [한국어](#한국어) | [Español](#español) | [Français](#français) | [Deutsch](#deutsch) | [Português](#português) | [Русский](#русский) | [العربية](#العربية) | [हिन्दी](#हिन्दी)
 
-Get notified in Discord when new jobs match your alert subscriptions.
+---
 
-### Setup
+</div>
 
-1. In Discord, go to your server's **Settings > Integrations > Webhooks**
-2. Click **New Webhook**, name it (e.g., "Job Alerts"), choose a channel, and copy the webhook URL
-3. In the app, go to the **Alerts** page
-4. Paste the webhook URL in the **Discord Webhook** section and click **Save**
-5. Click **Test** to verify — you should see a test message in your Discord channel
+<a name="english"></a>
 
-### How it works
+## Highlights
 
-When an alert subscription finds new matching jobs (based on your configured track, level, and location filters), the app automatically sends a rich Discord embed to your webhook with:
+<table>
+<tr>
+<td width="50%">
 
-- Job title and company
-- Location and experience level
-- Direct apply link
-- The subscription filters that matched
+### AI Job Description Summarizer
+> Click **Summarize** on any job listing to get a structured breakdown powered by `llama3.2:3b` running **locally** via Ollama.
 
-Set your subscription interval (e.g., every 12 hours) and the app checks automatically in the background. The backend must be running to process alerts — in Docker, this runs continuously.
+- **Responsibilities** — 3-5 key duties
+- **Required Skills** — must-have technologies
+- **Nice-to-Have** — bonus skills
+- **Experience Level** — inferred seniority
+- **Compensation** — salary if disclosed
+- **Red Flags** — unusual requirements or perks
+
+Summaries are **cached in SQLite** — each job is processed only once.
+
+</td>
+<td width="50%">
+
+### Discord Webhook Alerts
+> Get **push notifications** in Discord when new jobs match your subscription filters.
+
+**Setup in 5 steps:**
+1. Discord server **Settings > Integrations > Webhooks**
+2. Create webhook, copy URL
+3. Paste in app's **Alerts** page, click **Save**
+4. Click **Test** to verify
+5. Set subscription interval (15 min to 24 hours)
+
+The app checks automatically in the background and sends rich embeds with job details and apply links.
+
+</td>
+</tr>
+</table>
+
+---
+
+## Quick Start
+
+```bash
+# One command with Docker (includes Ollama + LLM auto-download)
+docker compose up --build
+
+# Or run locally
+cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload --port 8000
+cd frontend && npm install && npm run dev
+```
+
+| Service | Docker | Local |
+|---------|--------|-------|
+| Frontend | `http://localhost:3080` | `http://localhost:5173` |
+| Backend API | `http://localhost:8000` | `http://localhost:8000` |
+| Ollama | `http://localhost:11434` (auto) | Install from [ollama.com](https://ollama.com) |
+| API Docs | `http://localhost:8000/docs` | `http://localhost:8000/docs` |
+
+> First Docker run downloads the LLM model (~2 GB). Subsequent starts are instant.
 
 ---
 
 ## Table of Contents
 
+- [Highlights](#highlights)
+- [Quick Start](#quick-start)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Local Development](#local-development)
-  - [Docker](#docker)
+- [AI Summarization Setup](#ai-summarization-setup)
+- [Discord Webhook Setup](#discord-webhook-setup)
 - [Project Structure](#project-structure)
 - [API Reference](#api-reference)
 - [How It Works](#how-it-works)
-  - [Providers](#providers)
-  - [Track Matching](#track-matching)
-  - [Deduplication](#deduplication)
 - [Testing](#testing)
 - [Configuration](#configuration)
+- [Translations](#translations)
 - [License](#license)
 
 ---
@@ -98,12 +116,15 @@ Set your subscription interval (e.g., every 12 hours) and the app checks automat
 
 Most job boards are noisy. This tool takes a different approach:
 
-1. **You provide seeds** — company board URLs from Greenhouse or Lever (or pick from 33 curated presets).
-2. **You pick a track** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, or Consulting.
-3. **The engine searches** — fetches listings via public APIs, filters by track keywords, deduplicates, and flags missing data.
-4. **You review and queue** — browse results, inspect job descriptions, and add promising roles to your application queue.
+| Step | What Happens |
+|------|-------------|
+| **1. Add Seeds** | Provide company board URLs from Greenhouse or Lever (or pick from 33 curated presets) |
+| **2. Pick a Track** | Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, or Consulting |
+| **3. Run Search** | Engine fetches listings via public APIs, filters by track, deduplicates, classifies experience level |
+| **4. Review & Summarize** | Browse results, click Summarize for AI-powered key points, add to your application queue |
+| **5. Get Alerts** | Set up subscriptions and receive Discord notifications for new matches |
 
-No credentials required. No auto-apply. Every listing links back to its original source.
+> **No credentials required. No auto-apply. Every listing links back to its original source.**
 
 ---
 
@@ -118,7 +139,7 @@ No credentials required. No auto-apply. Every listing links back to its original
                                 ┌──────┴──────┐
                                 │             │
                           SQLite (WAL)   Ollama API        ┌─────────────┐
-                                │        :11434  ─────────── │ llama3.2:3b │
+                                │        :11434  ───────── │ llama3.2:3b │
                        ┌────────▼─────────┐                └─────────────┘
                        │    jobs.db        │
                        │  9 tables         │        ┌─────────────┐
@@ -127,30 +148,31 @@ No credentials required. No auto-apply. Every listing links back to its original
                        └──────────────────┘        └─────────────┘
 ```
 
-**Data flow:** Frontend → FastAPI → Provider APIs → Parse & Filter → Dedupe → SQLite → Response
-**Summarization:** Frontend → FastAPI → Ollama (local LLM) → Cache in SQLite → Response
-**Alerts:** Background loop → Provider APIs → Match filters → SQLite → Discord Webhook
+| Flow | Pipeline |
+|------|----------|
+| **Search** | Frontend → FastAPI → Provider APIs → Parse & Filter → Dedupe → SQLite → Response |
+| **Summarize** | Frontend → FastAPI → Ollama (local LLM) → Cache in SQLite → Response |
+| **Alerts** | Background loop → Provider APIs → Match filters → SQLite → Discord Webhook |
 
 ---
 
 ## Features
 
-- **AI JD summarization** — local LLM (llama3.2:3b via Ollama) extracts key responsibilities, skills, compensation, and red flags from job descriptions
-- **Discord webhook alerts** — get notified in Discord when new jobs match your subscription filters
-- **Subscription alerts** — configure automated background checks on custom intervals (15 min to 24 hours)
-- **Multi-provider search** — Greenhouse and Lever public board APIs
-- **Track-based filtering** — keyword matching across 8 role categories
-- **Experience level classification** — regex-based YOE extraction from JD text with title keyword priority
-- **Inline JD preview** — expand any job row to peek at the description without leaving the table
-- **Smart deduplication** — normalized hashing prevents duplicate entries across searches
-- **33 preset companies** — curated list with verified working board URLs across Big Tech, SaaS, Cybersecurity, Fintech, Consulting, and more
-- **Sortable results** — click column headers to sort by company, role, location, or post date
-- **Location & level filters** — filter results by city (NYC, SF, Seattle, etc.) and experience level
-- **Job detail drawer** — view full job descriptions, evidence flags, and apply links
-- **Application queue** — bookmark, track, and manage jobs through your pipeline (bookmarked → in queue → applied → rejected/archived)
-- **Evidence tracking** — missing apply URLs, job descriptions, or post dates are flagged, not guessed
-- **Time filtering** — filter by posted within 24h, 48h, 7d, or 30d
-- **Docker-ready** — single `docker compose up` with Ollama auto-setup
+| Category | Feature | Description |
+|----------|---------|-------------|
+| **AI** | JD Summarization | Local LLM extracts responsibilities, skills, compensation, and red flags |
+| **Notifications** | Discord Webhooks | Push alerts when new jobs match your subscriptions |
+| **Alerts** | Subscription System | Automated background checks on custom intervals (15 min – 24 hours) |
+| **Search** | Multi-Provider | Greenhouse and Lever public board APIs |
+| **Search** | Track Filtering | Keyword matching across 8 role categories |
+| **Search** | Experience Classification | Regex-based YOE extraction from JD text |
+| **UI** | Inline JD Preview | Expand any row to peek at the description |
+| **UI** | Sortable & Filterable | Sort by column, filter by location and level |
+| **Data** | Smart Deduplication | Normalized hashing prevents duplicates across searches |
+| **Data** | 33 Preset Companies | Curated list across Big Tech, SaaS, Fintech, and more |
+| **Data** | Evidence Tracking | Missing data is flagged, not guessed |
+| **Pipeline** | Application Queue | Track jobs: bookmarked → in queue → applied → rejected/archived |
+| **Deploy** | Docker-Ready | Single `docker compose up` with Ollama auto-setup |
 
 ---
 
@@ -158,17 +180,18 @@ No credentials required. No auto-apply. Every listing links back to its original
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Backend** | Python 3.12, FastAPI | REST API server |
-| **Database** | SQLite (WAL mode) | Persistent storage with concurrent reads |
-| **HTTP Client** | httpx | Async requests to provider APIs |
-| **HTML Parsing** | selectolax | Extract job description text |
-| **Frontend** | React 19, TypeScript 5.9 | Single-page application |
-| **Build Tool** | Vite 7.3 | Dev server and production builds |
-| **Routing** | React Router 7 | Client-side navigation |
-| **LLM** | Ollama, llama3.2:3b | Local AI summarization (no API keys) |
-| **Notifications** | Discord Webhooks | Push alerts for new matching jobs |
-| **Deployment** | Docker, nginx | Containerized production setup |
-| **Testing** | pytest, pytest-asyncio | Backend unit and integration tests |
+| **Backend** | ![Python](https://img.shields.io/badge/-Python_3.12-3776AB?style=flat-square&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) | REST API server |
+| **Database** | ![SQLite](https://img.shields.io/badge/-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white) | Persistent storage (WAL mode) |
+| **HTTP Client** | ![httpx](https://img.shields.io/badge/-httpx-2D2D2D?style=flat-square) | Async requests to provider APIs |
+| **HTML Parsing** | ![selectolax](https://img.shields.io/badge/-selectolax-444?style=flat-square) | Extract job description text |
+| **Frontend** | ![React](https://img.shields.io/badge/-React_19-61DAFB?style=flat-square&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/-TypeScript_5.9-3178C6?style=flat-square&logo=typescript&logoColor=white) | Single-page application |
+| **Build Tool** | ![Vite](https://img.shields.io/badge/-Vite_7.3-646CFF?style=flat-square&logo=vite&logoColor=white) | Dev server and production builds |
+| **Routing** | ![React Router](https://img.shields.io/badge/-React_Router_7-CA4245?style=flat-square&logo=reactrouter&logoColor=white) | Client-side navigation |
+| **LLM** | ![Ollama](https://img.shields.io/badge/-Ollama-000000?style=flat-square&logo=ollama&logoColor=white) | Local AI summarization (no API keys) |
+| **Notifications** | ![Discord](https://img.shields.io/badge/-Discord-5865F2?style=flat-square&logo=discord&logoColor=white) | Push alerts for new matching jobs |
+| **Deployment** | ![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=docker&logoColor=white) ![nginx](https://img.shields.io/badge/-nginx-009639?style=flat-square&logo=nginx&logoColor=white) | Containerized production setup |
+| **Testing** | ![pytest](https://img.shields.io/badge/-pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white) | Backend unit and integration tests |
+| **Validation** | ![Pydantic](https://img.shields.io/badge/-Pydantic_2-E92063?style=flat-square&logo=pydantic&logoColor=white) | Request/response schema validation |
 
 ---
 
@@ -229,7 +252,49 @@ docker compose up --build
 - Database persisted via Docker volume `db-data`
 - Model persisted via Docker volume `ollama-data`
 
-First run takes a few minutes to download the LLM model (~2 GB). Subsequent starts are instant.
+> First run takes a few minutes to download the LLM model (~2 GB). Subsequent starts are instant.
+
+---
+
+## AI Summarization Setup
+
+### With Docker (automatic)
+
+Ollama is included as a Docker Compose service. Run `docker compose up` and the model downloads automatically. **No extra steps.**
+
+### Without Docker (local)
+
+```bash
+# 1. Install Ollama from https://ollama.com
+
+# 2. Pull the model (~2 GB download)
+ollama pull llama3.2:3b
+
+# 3. Ollama runs automatically in the background after install
+# 4. Start the app — the Summarize button appears when Ollama is detected
+```
+
+> **Graceful fallback:** If Ollama is not running, the app works normally. The Summarize button shows an error and raw JD text remains visible.
+
+---
+
+## Discord Webhook Setup
+
+| Step | Action |
+|------|--------|
+| **1** | In Discord: **Server Settings > Integrations > Webhooks > New Webhook** |
+| **2** | Name it (e.g. "Job Alerts"), choose a channel, **copy the webhook URL** |
+| **3** | In the app: go to the **Alerts** page |
+| **4** | Paste the URL in **Discord Webhook** section, click **Save** |
+| **5** | Click **Test** — you should see a test message in Discord |
+
+When subscriptions find new matches, the app sends rich Discord embeds with:
+- Job title and company
+- Location and experience level
+- Direct apply link
+- The subscription filters that matched
+
+> **Note:** The backend must be running for alerts to process. In Docker, this runs continuously.
 
 ---
 
@@ -346,7 +411,7 @@ First run takes a few minutes to download the LLM model (~2 GB). Subsequent star
 | `PUT` | `/v1/user/profile` | Update user preferences (including `discord_webhook_url`) |
 | `POST` | `/v1/user/profile/test-discord` | Send a test message to configured Discord webhook |
 
-Full interactive documentation available at `/docs` (Swagger UI) when the backend is running.
+> Full interactive documentation available at `/docs` (Swagger UI) when the backend is running.
 
 ---
 
@@ -403,8 +468,6 @@ source .venv/bin/activate
 pytest -v
 ```
 
-**Test coverage:**
-
 | Suite | Tests | What It Covers |
 |-------|-------|---------------|
 | `test_api.py` | API endpoints | Health, profile CRUD, seeds CRUD, search validation, queue operations |
@@ -420,6 +483,203 @@ pytest -v
 | `DB_PATH` | `data/jobs.db` | SQLite database file path |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API URL (set to `http://ollama:11434` in Docker) |
 | `VITE_API_URL` | `http://localhost:8000` | Backend API URL (frontend) |
+
+---
+
+<a name="translations"></a>
+
+## Translations
+
+<details>
+<summary><a name="中文"></a><strong>中文 (Chinese)</strong></summary>
+
+### Job Search Autopilot — 求职自动化仪表板
+
+一个全栈求职发现仪表板，从公共ATS（申请人跟踪系统）平台聚合软件工程职位。通过Greenhouse和Lever API搜索真实、经过验证的职位列表。
+
+**核心功能：**
+- **AI职位描述摘要** — 使用本地运行的 `llama3.2:3b` 模型，将职位描述提炼为结构化要点（职责、技能要求、薪资等）
+- **Discord Webhook通知** — 当新职位匹配您的订阅条件时，自动发送Discord通知
+- **智能去重** — 跨搜索自动去重，避免重复职位
+- **8个职业方向** — Backend、Frontend、Fullstack、DevOps、Data、ML、AI Agent、Consulting
+
+**快速开始：**
+```bash
+docker compose up --build
+```
+首次运行会自动下载LLM模型（约2GB），后续启动秒级完成。
+</details>
+
+<details>
+<summary><a name="日本語"></a><strong>日本語 (Japanese)</strong></summary>
+
+### Job Search Autopilot — 求人検索自動化ダッシュボード
+
+パブリックATS（応募者追跡システム）のボードからソフトウェアエンジニアリングの求人を集約するフルスタック求人検索ダッシュボードです。
+
+**主な機能：**
+- **AI求人要約** — ローカルLLM（`llama3.2:3b`）で求人内容を構造化された要点に要約（責務、必要スキル、給与など）
+- **Discord Webhook通知** — 新しい求人がサブスクリプション条件に一致した際、Discordに自動通知
+- **スマート重複排除** — 検索をまたいだ自動重複排除
+- **8つの職種トラック** — Backend、Frontend、Fullstack、DevOps、Data、ML、AI Agent、Consulting
+
+**クイックスタート：**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="한국어"></a><strong>한국어 (Korean)</strong></summary>
+
+### Job Search Autopilot — 구직 자동화 대시보드
+
+공개 ATS(지원자 추적 시스템) 보드에서 소프트웨어 엔지니어링 채용 공고를 집계하는 풀스택 구직 대시보드입니다.
+
+**주요 기능:**
+- **AI 채용공고 요약** — 로컬 LLM(`llama3.2:3b`)으로 채용 설명을 구조화된 핵심 정보로 요약 (책임, 기술 요건, 연봉 등)
+- **Discord Webhook 알림** — 새 채용공고가 구독 조건과 일치하면 Discord로 자동 알림
+- **스마트 중복 제거** — 검색 간 자동 중복 제거
+- **8개 직무 트랙** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**빠른 시작:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="español"></a><strong>Español (Spanish)</strong></summary>
+
+### Job Search Autopilot — Panel de Descubrimiento de Empleo
+
+Un panel de descubrimiento de empleo full-stack que agrega roles de ingeniería de software desde tableros ATS públicos (Greenhouse y Lever).
+
+**Funciones principales:**
+- **Resumen de JD con IA** — LLM local (`llama3.2:3b`) extrae responsabilidades, habilidades requeridas, salario y señales de alerta
+- **Notificaciones Discord Webhook** — Recibe alertas automáticas cuando nuevos empleos coincidan con tus suscripciones
+- **Deduplicación inteligente** — Evita duplicados entre búsquedas
+- **8 categorías profesionales** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**Inicio rápido:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="français"></a><strong>Français (French)</strong></summary>
+
+### Job Search Autopilot — Tableau de Bord de Recherche d'Emploi
+
+Un tableau de bord full-stack de découverte d'emplois qui agrège les postes en ingénierie logicielle depuis les plateformes ATS publiques (Greenhouse et Lever).
+
+**Fonctionnalités principales :**
+- **Résumé IA des offres** — LLM local (`llama3.2:3b`) extrait responsabilités, compétences, salaire et points d'attention
+- **Notifications Discord Webhook** — Alertes automatiques quand de nouveaux postes correspondent à vos abonnements
+- **Déduplication intelligente** — Évite les doublons entre les recherches
+- **8 filières professionnelles** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**Démarrage rapide :**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="deutsch"></a><strong>Deutsch (German)</strong></summary>
+
+### Job Search Autopilot — Stellensuche-Dashboard
+
+Ein Full-Stack-Dashboard zur Stellensuche, das Software-Engineering-Positionen von öffentlichen ATS-Plattformen (Greenhouse und Lever) aggregiert.
+
+**Hauptfunktionen:**
+- **KI-Stellenbeschreibung-Zusammenfassung** — Lokales LLM (`llama3.2:3b`) extrahiert Verantwortlichkeiten, erforderliche Fähigkeiten, Gehalt und Auffälligkeiten
+- **Discord Webhook-Benachrichtigungen** — Automatische Benachrichtigungen wenn neue Stellen Ihren Abonnementkriterien entsprechen
+- **Intelligente Deduplizierung** — Verhindert Duplikate über Suchen hinweg
+- **8 Berufsfelder** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**Schnellstart:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="português"></a><strong>Português (Portuguese)</strong></summary>
+
+### Job Search Autopilot — Painel de Busca de Vagas
+
+Um painel full-stack de descoberta de vagas que agrega posições de engenharia de software de plataformas ATS públicas (Greenhouse e Lever).
+
+**Funcionalidades principais:**
+- **Resumo de JD com IA** — LLM local (`llama3.2:3b`) extrai responsabilidades, habilidades necessárias, salário e pontos de atenção
+- **Notificações Discord Webhook** — Alertas automáticos quando novas vagas correspondem às suas assinaturas
+- **Deduplicação inteligente** — Evita duplicatas entre buscas
+- **8 trilhas profissionais** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**Início rápido:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="русский"></a><strong>Русский (Russian)</strong></summary>
+
+### Job Search Autopilot — Панель Поиска Вакансий
+
+Полнофункциональная панель поиска вакансий, агрегирующая позиции в разработке ПО с публичных ATS-платформ (Greenhouse и Lever).
+
+**Основные функции:**
+- **ИИ-резюме вакансий** — Локальная LLM (`llama3.2:3b`) извлекает обязанности, требуемые навыки, зарплату и важные детали
+- **Discord Webhook уведомления** — Автоматические оповещения при появлении вакансий, соответствующих вашим подпискам
+- **Умная дедупликация** — Предотвращение дублирования между поисками
+- **8 профессиональных направлений** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**Быстрый старт:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="العربية"></a><strong>العربية (Arabic)</strong></summary>
+
+### Job Search Autopilot — لوحة البحث عن الوظائف
+
+لوحة متكاملة لاكتشاف الوظائف تجمع وظائف هندسة البرمجيات من منصات ATS العامة (Greenhouse و Lever).
+
+**الميزات الرئيسية:**
+- **ملخص الوظائف بالذكاء الاصطناعي** — نموذج LLM محلي (`llama3.2:3b`) يستخرج المسؤوليات والمهارات المطلوبة والراتب والملاحظات المهمة
+- **إشعارات Discord Webhook** — تنبيهات تلقائية عند ظهور وظائف جديدة تطابق اشتراكاتك
+- **إزالة التكرارات الذكية** — منع التكرار عبر عمليات البحث المتعددة
+- **8 مسارات مهنية** — Backend، Frontend، Fullstack، DevOps، Data، ML، AI Agent، Consulting
+
+**البدء السريع:**
+```bash
+docker compose up --build
+```
+</details>
+
+<details>
+<summary><a name="हिन्दी"></a><strong>हिन्दी (Hindi)</strong></summary>
+
+### Job Search Autopilot — नौकरी खोज डैशबोर्ड
+
+एक फुल-स्टैक नौकरी खोज डैशबोर्ड जो सार्वजनिक ATS प्लेटफॉर्म (Greenhouse और Lever) से सॉफ्टवेयर इंजीनियरिंग पदों को एकत्रित करता है।
+
+**मुख्य विशेषताएं:**
+- **AI नौकरी विवरण सारांश** — स्थानीय LLM (`llama3.2:3b`) जिम्मेदारियों, आवश्यक कौशल, वेतन और महत्वपूर्ण बिंदुओं को निकालता है
+- **Discord Webhook सूचनाएं** — जब नई नौकरियां आपकी सदस्यता शर्तों से मेल खाती हैं तो स्वचालित अलर्ट
+- **स्मार्ट डिडुप्लिकेशन** — खोजों के बीच डुप्लिकेट को रोकता है
+- **8 करियर ट्रैक** — Backend, Frontend, Fullstack, DevOps, Data, ML, AI Agent, Consulting
+
+**त्वरित शुरुआत:**
+```bash
+docker compose up --build
+```
+</details>
 
 ---
 
