@@ -59,6 +59,11 @@ class ExperienceLevel(str, Enum):
     HIGHER_LEVEL = "higher-level"
 
 
+class LlmProvider(str, Enum):
+    OLLAMA = "ollama"
+    OPENAI = "openai"
+
+
 # --- Request / Response models ---
 
 class SeedCreate(BaseModel):
@@ -84,6 +89,8 @@ class ProfileUpdate(BaseModel):
     posted_within: Optional[PostedWithin] = None
     remote_only: Optional[bool] = None
     discord_webhook_url: Optional[str] = None
+    llm_provider: Optional[LlmProvider] = None
+    openai_api_key: Optional[str] = None
 
 
 class ProfileResponse(BaseModel):
@@ -94,6 +101,8 @@ class ProfileResponse(BaseModel):
     posted_within: str
     remote_only: bool
     discord_webhook_url: Optional[str] = None
+    llm_provider: str = "ollama"
+    openai_api_key_set: bool = False
     updated_at: str
 
 

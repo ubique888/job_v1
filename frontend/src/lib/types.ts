@@ -93,3 +93,11 @@ export interface CustomTrack {
   keywords: string[];
   created_at: string;
 }
+
+export type LlmProvider = "ollama" | "openai";
+
+export interface ProfileData {
+  discord_webhook_url: string | null;
+  llm_provider: LlmProvider;
+  openai_api_key_set: boolean;
+}

@@ -30,6 +30,11 @@ def _migrate_db(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE user_profile ADD COLUMN discord_webhook_url TEXT")
         conn.commit()
 
+    if "llm_provider" not in profile_cols:
+        conn.execute("ALTER TABLE user_profile ADD COLUMN llm_provider TEXT DEFAULT 'ollama'")
+        conn.execute("ALTER TABLE user_profile ADD COLUMN openai_api_key TEXT")
+        conn.commit()
+
     # Ensure job_summaries table exists (for existing databases)
     existing_tables = {row[0] for row in conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'"
@@ -78,6 +83,8 @@ CREATE TABLE IF NOT EXISTS user_profile (
     posted_within TEXT DEFAULT '7d',
     remote_only INTEGER DEFAULT 0,
     discord_webhook_url TEXT,
+    llm_provider TEXT DEFAULT 'ollama',
+    openai_api_key TEXT,
     updated_at TEXT DEFAULT (datetime('now'))
 );
 

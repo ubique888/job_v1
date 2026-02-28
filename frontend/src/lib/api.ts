@@ -94,16 +94,25 @@ export const markAlertsRead = (subId: string) =>
 
 // Profile
 export const getProfile = () =>
-  request<{ discord_webhook_url: string | null }>("/v1/user/profile");
+  request<import("./types").ProfileData>("/v1/user/profile");
 
-export const updateProfile = (data: { discord_webhook_url?: string }) =>
-  request<{ discord_webhook_url: string | null }>("/v1/user/profile", {
+export const updateProfile = (data: {
+  discord_webhook_url?: string;
+  llm_provider?: string;
+  openai_api_key?: string;
+}) =>
+  request<import("./types").ProfileData>("/v1/user/profile", {
     method: "PUT",
     body: JSON.stringify(data),
   });
 
 export const testDiscordWebhook = () =>
   request<{ status: string; message: string }>("/v1/user/profile/test-discord", {
+    method: "POST",
+  });
+
+export const testOpenaiKey = () =>
+  request<{ status: string; message: string }>("/v1/user/profile/test-openai", {
     method: "POST",
   });
 

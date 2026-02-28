@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as api from "../lib/api";
-import type { Subscription, Alert, Job, Track, ExperienceLevel } from "../lib/types";
+import type { Subscription, Alert, Job, Track, ExperienceLevel, LlmProvider } from "../lib/types";
 const LOCATIONS = ["", "New York", "Seattle", "Los Angeles", "San Francisco", "Boston", "London", "Paris", "Remote", "Other"];
 const INTERVALS = [
   { label: "15 min", value: 15 },
@@ -66,6 +66,15 @@ export default function AlertsPage() {
   const [webhookTesting, setWebhookTesting] = useState(false);
   const [webhookMsg, setWebhookMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  // LLM settings
+  const [llmProvider, setLlmProvider] = useState<LlmProvider>("ollama");
+  const [llmProviderSaved, setLlmProviderSaved] = useState<LlmProvider>("ollama");
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeySet, setApiKeySet] = useState(false);
+  const [llmSaving, setLlmSaving] = useState(false);
+  const [llmTesting, setLlmTesting] = useState(false);
+  const [llmMsg, setLlmMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
   // Load subscriptions + profile + tracks
   useEffect(() => {
     api
@@ -78,6 +87,9 @@ export default function AlertsPage() {
       const url = p.discord_webhook_url || "";
       setWebhookUrl(url);
       setWebhookSaved(url);
+      setLlmProvider(p.llm_provider || "ollama");
+      setLlmProviderSaved(p.llm_provider || "ollama");
+      setApiKeySet(p.openai_api_key_set || false);
     });
 
     api.getTracks().then(setAllTracks).catch(() => {});
@@ -191,6 +203,60 @@ export default function AlertsPage() {
     }
   };
 
+  // Save LLM settings
+  const saveLlm = async () => {
+    setLlmSaving(true);
+    setLlmMsg(null);
+    try {
+      const payload: Record<string, string> = { llm_provider: llmProvider };
+      if (apiKey) payload.openai_api_key = apiKey;
+      const res = await api.updateProfile(payload);
+      setLlmProviderSaved(res.llm_provider || "ollama");
+      setLlmProvider(res.llm_provider || "ollama");
+      setApiKeySet(res.openai_api_key_set || false);
+      setApiKey("");
+      setLlmMsg({ type: "ok", text: "LLM settings saved!" });
+    } catch (e: any) {
+      setLlmMsg({ type: "err", text: e.message });
+    } finally {
+      setLlmSaving(false);
+    }
+  };
+
+  // Test OpenAI key
+  const testOpenai = async () => {
+    setLlmTesting(true);
+    setLlmMsg(null);
+    try {
+      await api.testOpenaiKey();
+      setLlmMsg({ type: "ok", text: "OpenAI API key is valid!" });
+    } catch (e: any) {
+      setLlmMsg({ type: "err", text: `Test failed: ${e.message}` });
+    } finally {
+      setLlmTesting(false);
+    }
+  };
+
+  // Clear OpenAI key
+  const clearApiKey = async () => {
+    setLlmSaving(true);
+    setLlmMsg(null);
+    try {
+      const res = await api.updateProfile({ llm_provider: "ollama", openai_api_key: "" });
+      setLlmProvider(res.llm_provider || "ollama");
+      setLlmProviderSaved(res.llm_provider || "ollama");
+      setApiKeySet(false);
+      setApiKey("");
+      setLlmMsg({ type: "ok", text: "API key removed. Switched to Ollama." });
+    } catch (e: any) {
+      setLlmMsg({ type: "err", text: e.message });
+    } finally {
+      setLlmSaving(false);
+    }
+  };
+
+  const llmDirty = llmProvider !== llmProviderSaved || apiKey.length > 0;
+
   return (
     <div>
       <h2 style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>Job Alerts</h2>
@@ -238,6 +304,75 @@ export default function AlertsPage() {
         {webhookMsg && (
           <p className={`webhook-msg ${webhookMsg.type === "ok" ? "webhook-msg-ok" : "webhook-msg-err"}`}>
             {webhookMsg.text}
+          </p>
+        )}
+      </div>
+
+      {/* LLM settings */}
+      <div className="webhook-settings">
+        <div className="webhook-header">
+          <h3>LLM Summarizer</h3>
+          <span className="webhook-status">
+            {llmProviderSaved === "openai" && apiKeySet ? (
+              <span className="webhook-active">OpenAI</span>
+            ) : (
+              <span className="webhook-inactive">Ollama (Local)</span>
+            )}
+          </span>
+        </div>
+        <p className="webhook-desc">
+          Choose which LLM to use for summarizing job descriptions. Use local Ollama or enter your OpenAI API key.
+        </p>
+        <div className="webhook-form">
+          <select
+            value={llmProvider}
+            onChange={(e) => {
+              setLlmProvider(e.target.value as LlmProvider);
+              setLlmMsg(null);
+            }}
+            style={{ background: "#0d1117", border: "1px solid #30363d", color: "#e1e4e8", borderRadius: 6, padding: "0.4rem 0.6rem", fontSize: "0.85rem" }}
+          >
+            <option value="ollama">Ollama (Local)</option>
+            <option value="openai">OpenAI</option>
+          </select>
+          {llmProvider === "openai" && (
+            <input
+              type="password"
+              placeholder={apiKeySet ? "Key saved — enter new key to change" : "sk-..."}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="webhook-input"
+            />
+          )}
+          <button
+            className="btn-primary btn-sm"
+            onClick={saveLlm}
+            disabled={llmSaving || !llmDirty}
+          >
+            {llmSaving ? "Saving..." : "Save"}
+          </button>
+          {llmProviderSaved === "openai" && apiKeySet && (
+            <>
+              <button
+                className="btn-secondary btn-sm"
+                onClick={testOpenai}
+                disabled={llmTesting}
+              >
+                {llmTesting ? "Testing..." : "Test"}
+              </button>
+              <button
+                className="btn-danger btn-sm"
+                onClick={clearApiKey}
+                disabled={llmSaving}
+              >
+                Clear Key
+              </button>
+            </>
+          )}
+        </div>
+        {llmMsg && (
+          <p className={`webhook-msg ${llmMsg.type === "ok" ? "webhook-msg-ok" : "webhook-msg-err"}`}>
+            {llmMsg.text}
           </p>
         )}
       </div>
