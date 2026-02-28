@@ -107,6 +107,18 @@ export const testDiscordWebhook = () =>
     method: "POST",
   });
 
+// Tracks
+export const getTracks = () => request<string[]>("/v1/tracks");
+export const getCustomTracks = () =>
+  request<import("./types").CustomTrack[]>("/v1/custom-tracks");
+export const createCustomTrack = (data: { name: string; keywords: string[] }) =>
+  request<import("./types").CustomTrack>("/v1/custom-tracks", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+export const deleteCustomTrack = (id: string) =>
+  request<void>(`/v1/custom-tracks/${id}`, { method: "DELETE" });
+
 // Summaries
 export const getJobSummary = (jobId: string) =>
   request<import("./types").JobSummary>(`/v1/jobs/${jobId}/summary`);

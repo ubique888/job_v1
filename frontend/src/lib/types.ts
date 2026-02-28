@@ -1,4 +1,4 @@
-export type Track = "Backend" | "Frontend" | "Fullstack" | "DevOps" | "Data" | "ML" | "AI Agent" | "Consulting";
+export type Track = string;  // Built-in + user-defined custom tracks
 export type PostedWithin = "24h" | "48h" | "7d" | "30d";
 export type Provider = "greenhouse" | "lever";
 export type ApplyUrlStatus = "direct" | "derived" | "unknown";
@@ -84,5 +84,12 @@ export interface JobSummary {
   job_id: string;
   summary_text: string;
   model_name: string;
+  created_at: string;
+}
+
+export interface CustomTrack {
+  id: string;
+  name: string;
+  keywords: string[];
   created_at: string;
 }

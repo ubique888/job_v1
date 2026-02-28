@@ -47,6 +47,20 @@ def _migrate_db(conn: sqlite3.Connection):
         """)
         conn.commit()
 
+    # Ensure custom_tracks table exists (for existing databases)
+    if "custom_tracks" not in existing_tables:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS custom_tracks (
+                id TEXT PRIMARY KEY,
+                user_id TEXT DEFAULT 'default',
+                name TEXT NOT NULL,
+                keywords_json TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(user_id, name)
+            )
+        """)
+        conn.commit()
+
 
 def init_db():
     conn = get_connection()
@@ -174,6 +188,15 @@ CREATE TABLE IF NOT EXISTS job_summaries (
     model_name TEXT NOT NULL DEFAULT 'llama3.2:3b',
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY(job_id) REFERENCES jobs(id)
+);
+
+CREATE TABLE IF NOT EXISTS custom_tracks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT DEFAULT 'default',
+    name TEXT NOT NULL,
+    keywords_json TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, name)
 );
 
 INSERT OR IGNORE INTO user_profile (user_id) VALUES ('default');

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
-from .routers import profile, queue, search, seeds, summary
+from .routers import custom_tracks, profile, queue, search, seeds, summary
 from .routers.subscriptions import alerts_router, router as subscriptions_router
 from .subscription_checker import run_subscription_loop
 
@@ -46,6 +46,7 @@ app.include_router(queue.router)
 app.include_router(subscriptions_router)
 app.include_router(alerts_router)
 app.include_router(summary.router)
+app.include_router(custom_tracks.router)
 
 
 @app.get("/health")

@@ -1,5 +1,8 @@
 """Track keyword matching — filters jobs by role track (Backend, DevOps, etc.)."""
 
+import json
+from .database import get_connection
+
 # Keywords are matched against lowercased title + JD text.
 # Order doesn't matter. Matching is substring-based.
 TRACK_KEYWORDS: dict[str, list[str]] = {
@@ -116,12 +119,60 @@ TRACK_KEYWORDS: dict[str, list[str]] = {
         "partner engineer",
         "pre-sales engineer", "presales",
     ],
+    "Product Manager": [
+        "product manager", "product management",
+        "product owner", "product lead",
+        "senior product manager", "group product manager",
+        "associate product manager", "apm",
+        "technical product manager", "tpm",
+        "product director",
+        "product strategist", "product strategy",
+        "product analyst",
+        "product operations", "product ops",
+        "growth product manager",
+        "platform product manager",
+        "product marketing manager",
+    ],
 }
+
+
+def _load_custom_tracks(user_id: str = "default") -> dict[str, list[str]]:
+    """Load custom tracks from the database."""
+    try:
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT name, keywords_json FROM custom_tracks WHERE user_id = ?",
+            (user_id,),
+        ).fetchall()
+        conn.close()
+        result = {}
+        for row in rows:
+            result[row["name"]] = json.loads(row["keywords_json"])
+        return result
+    except Exception:
+        return {}
+
+
+def get_all_keywords(user_id: str = "default") -> dict[str, list[str]]:
+    """Return merged dict of built-in + custom track keywords."""
+    merged = dict(TRACK_KEYWORDS)
+    custom = _load_custom_tracks(user_id)
+    merged.update(custom)
+    return merged
+
+
+def get_all_track_names(user_id: str = "default") -> list[str]:
+    """Return ordered list of all track names (built-in first, then custom)."""
+    builtin = list(TRACK_KEYWORDS.keys())
+    custom = _load_custom_tracks(user_id)
+    custom_names = [n for n in custom if n not in TRACK_KEYWORDS]
+    return builtin + sorted(custom_names)
 
 
 def matches_track(title: str, jd_text: str | None, track: str) -> bool:
     """Check if a job matches the given track based on title and JD keywords."""
-    keywords = TRACK_KEYWORDS.get(track)
+    all_keywords = get_all_keywords()
+    keywords = all_keywords.get(track)
     if keywords is None:
         return True  # Unknown track — don't filter
 

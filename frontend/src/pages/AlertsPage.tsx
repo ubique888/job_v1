@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import * as api from "../lib/api";
 import type { Subscription, Alert, Job, Track, ExperienceLevel } from "../lib/types";
-
-const TRACKS: Track[] = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting"];
 const LOCATIONS = ["", "New York", "Seattle", "Los Angeles", "San Francisco", "Boston", "London", "Paris", "Remote", "Other"];
 const INTERVALS = [
   { label: "15 min", value: 15 },
@@ -38,6 +36,9 @@ function timeAgo(iso: string): string {
 }
 
 export default function AlertsPage() {
+  // Dynamic tracks
+  const [allTracks, setAllTracks] = useState<string[]>(["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting", "Product Manager"]);
+
   // Subscriptions
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ export default function AlertsPage() {
   const [webhookTesting, setWebhookTesting] = useState(false);
   const [webhookMsg, setWebhookMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  // Load subscriptions + profile
+  // Load subscriptions + profile + tracks
   useEffect(() => {
     api
       .getSubscriptions()
@@ -78,6 +79,8 @@ export default function AlertsPage() {
       setWebhookUrl(url);
       setWebhookSaved(url);
     });
+
+    api.getTracks().then(setAllTracks).catch(() => {});
   }, []);
 
   // Load alerts when expanding a subscription
@@ -246,7 +249,7 @@ export default function AlertsPage() {
           <div className="field">
             <label>Track</label>
             <select value={newTrack} onChange={(e) => setNewTrack(e.target.value as Track)}>
-              {TRACKS.map((t) => (
+              {allTracks.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>

@@ -14,12 +14,21 @@ from ..models.schemas import (
     SearchRunResponse,
 )
 from ..search_engine import execute_search_run
+from ..track_matcher import get_all_track_names
 
 router = APIRouter(prefix="/v1/search", tags=["search"])
 
 
 @router.post("/runs", response_model=SearchRunResponse, status_code=201)
 async def create_search_run(body: SearchRunCreate, bg: BackgroundTasks):
+    # Validate track exists (built-in or custom)
+    valid_tracks = get_all_track_names()
+    if body.track not in valid_tracks:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown track '{body.track}'. Valid tracks: {valid_tracks}",
+        )
+
     conn = get_connection()
 
     # Validate at least 1 seed exists for enabled providers
@@ -39,7 +48,7 @@ async def create_search_run(body: SearchRunCreate, bg: BackgroundTasks):
 
     conn.execute(
         "INSERT INTO search_runs (id, user_id, track, posted_within, state, started_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (run_id, "default", body.track.value, body.posted_within.value, "pending", now),
+        (run_id, "default", body.track, body.posted_within.value, "pending", now),
     )
     conn.commit()
     conn.close()
@@ -48,7 +57,7 @@ async def create_search_run(body: SearchRunCreate, bg: BackgroundTasks):
     await execute_search_run(
         run_id=run_id,
         user_id="default",
-        track=body.track.value,
+        track=body.track,
         posted_within=body.posted_within.value,
         provider_enabled=body.provider_enabled,
         limit_per_provider=body.limit_per_provider,

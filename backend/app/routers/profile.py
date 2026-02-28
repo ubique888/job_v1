@@ -30,7 +30,7 @@ def update_profile(body: ProfileUpdate):
 
     if body.track is not None:
         updates.append("track = ?")
-        params.append(body.track.value)
+        params.append(body.track)
     if body.locations is not None:
         updates.append("locations_json = ?")
         params.append(json.dumps(body.locations))

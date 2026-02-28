@@ -89,7 +89,7 @@ def create_subscription(body: SubscriptionCreate):
         (
             sub_id,
             "default",
-            body.track.value,
+            body.track,
             body.experience_level.value if body.experience_level else None,
             body.location_filter,
             body.interval_minutes,
@@ -120,7 +120,7 @@ def update_subscription(sub_id: str, body: SubscriptionUpdate):
     params = []
     if body.track is not None:
         updates.append("track = ?")
-        params.append(body.track.value)
+        params.append(body.track)
     if body.experience_level is not None:
         updates.append("experience_level = ?")
         params.append(body.experience_level.value)

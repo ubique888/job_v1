@@ -792,3 +792,55 @@ a:hover {
 .webhook-msg-err {
   color: #f85149;
 }
+
+/* --- Custom track panel --- */
+.custom-track-panel {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.custom-track-panel h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: #c9d1d9;
+}
+
+.custom-track-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.custom-track-form input {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #e1e4e8;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.custom-track-form input:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.custom-tracks-list {
+  margin-top: 0.5rem;
+}
+
+.custom-track-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  background: #0d1117;
+}

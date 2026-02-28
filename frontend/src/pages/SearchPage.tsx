@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as api from "../lib/api";
 import { CATEGORIES, DEFAULT_SEEDS, getBoardUrl } from "../lib/defaultSeeds";
-import type { Job, JobSummary, Seed, Track, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
+import type { Job, JobSummary, Seed, Track, CustomTrack, PostedWithin, SearchRunResult, ExperienceLevel } from "../lib/types";
 
 type SortKey = "company" | "title" | "location" | "posted_age_hours";
 type SortDir = "asc" | "desc";
 type LocationFilter = "All" | "New York" | "Seattle" | "Los Angeles" | "San Francisco" | "Boston" | "London" | "Paris" | "Remote" | "Other";
 type LevelFilter = "All" | ExperienceLevel;
 
-const TRACKS: Track[] = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting"];
+const BUILTIN_TRACKS = ["Backend", "Frontend", "Fullstack", "DevOps", "Data", "ML", "AI Agent", "Consulting", "Product Manager"];
 const POSTED: PostedWithin[] = ["24h", "48h", "7d", "30d"];
 const LOCATIONS: LocationFilter[] = ["All", "New York", "Seattle", "Los Angeles", "San Francisco", "Boston", "London", "Paris", "Remote", "Other"];
 
@@ -49,6 +49,14 @@ export default function SearchPage() {
   const [postedWithin, setPostedWithin] = useState<PostedWithin>("7d");
   const [ghEnabled, setGhEnabled] = useState(true);
   const [leverEnabled, setLeverEnabled] = useState(true);
+
+  // Dynamic tracks (built-in + custom)
+  const [allTracks, setAllTracks] = useState<string[]>(BUILTIN_TRACKS);
+  const [customTracks, setCustomTracks] = useState<CustomTrack[]>([]);
+  const [showTrackForm, setShowTrackForm] = useState(false);
+  const [newTrackName, setNewTrackName] = useState("");
+  const [newTrackKeywords, setNewTrackKeywords] = useState("");
+  const [creatingTrack, setCreatingTrack] = useState(false);
 
   // Seeds
   const [seeds, setSeeds] = useState<Seed[]>([]);
@@ -166,10 +174,45 @@ export default function SearchPage() {
     return result;
   }, [sortedJobs, locationFilter, levelFilter]);
 
-  // Load seeds on mount
+  // Load seeds + tracks on mount
   useEffect(() => {
     api.getSeeds().then(setSeeds).catch(() => {});
+    api.getTracks().then(setAllTracks).catch(() => {});
+    api.getCustomTracks().then(setCustomTracks).catch(() => {});
   }, []);
+
+  const customTrackNames = new Set(customTracks.map((ct) => ct.name));
+
+  const handleCreateTrack = async () => {
+    if (!newTrackName.trim() || !newTrackKeywords.trim()) return;
+    setCreatingTrack(true);
+    setError("");
+    try {
+      const keywords = newTrackKeywords.split(",").map((k) => k.trim()).filter(Boolean);
+      const ct = await api.createCustomTrack({ name: newTrackName.trim(), keywords });
+      setCustomTracks((prev) => [ct, ...prev]);
+      setAllTracks((prev) => [...prev, ct.name]);
+      setNewTrackName("");
+      setNewTrackKeywords("");
+      setShowTrackForm(false);
+      setTrack(ct.name);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setCreatingTrack(false);
+    }
+  };
+
+  const handleDeleteTrack = async (ct: CustomTrack) => {
+    try {
+      await api.deleteCustomTrack(ct.id);
+      setCustomTracks((prev) => prev.filter((t) => t.id !== ct.id));
+      setAllTracks((prev) => prev.filter((t) => t !== ct.name));
+      if (track === ct.name) setTrack("Backend");
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
   const addSeed = async () => {
     if (!seedCompany.trim() || !seedUrl.trim()) return;
@@ -266,11 +309,21 @@ export default function SearchPage() {
       <div className="controls">
         <div className="field">
           <label>Applying For</label>
-          <select value={track} onChange={(e) => setTrack(e.target.value as Track)}>
-            {TRACKS.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
+          <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+            <select value={track} onChange={(e) => setTrack(e.target.value as Track)} style={{ flex: 1 }}>
+              {allTracks.map((t) => (
+                <option key={t} value={t}>{customTrackNames.has(t) ? `${t} *` : t}</option>
+              ))}
+            </select>
+            <button
+              className="btn-secondary btn-sm"
+              onClick={() => setShowTrackForm(!showTrackForm)}
+              title="Create custom track"
+              style={{ padding: "0.35rem 0.5rem", fontSize: "0.9rem", lineHeight: 1 }}
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <div className="field">
@@ -327,6 +380,57 @@ export default function SearchPage() {
           {loading ? <><span className="spinner" /> Searching...</> : "Run Search"}
         </button>
       </div>
+
+      {/* Custom track form */}
+      {showTrackForm && (
+        <div className="custom-track-panel">
+          <h3>Create Custom Track</h3>
+          <p style={{ color: "#8b949e", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
+            Define your own job category with custom keywords. Jobs matching any keyword will appear in search results.
+          </p>
+          <div className="custom-track-form">
+            <input
+              type="text"
+              placeholder="Track name (e.g. Game Dev)"
+              value={newTrackName}
+              onChange={(e) => setNewTrackName(e.target.value)}
+              style={{ minWidth: 180 }}
+            />
+            <input
+              type="text"
+              placeholder="Keywords, comma-separated (e.g. unity, unreal, game engineer)"
+              value={newTrackKeywords}
+              onChange={(e) => setNewTrackKeywords(e.target.value)}
+              style={{ flex: 1, minWidth: 300 }}
+            />
+            <button
+              className="btn-primary btn-sm"
+              onClick={handleCreateTrack}
+              disabled={creatingTrack || !newTrackName.trim() || !newTrackKeywords.trim()}
+            >
+              {creatingTrack ? "Creating..." : "Create Track"}
+            </button>
+          </div>
+          {customTracks.length > 0 && (
+            <div className="custom-tracks-list">
+              <h4 style={{ fontSize: "0.85rem", marginTop: "0.75rem", marginBottom: "0.5rem", color: "#8b949e" }}>Your Custom Tracks</h4>
+              {customTracks.map((ct) => (
+                <div key={ct.id} className="custom-track-item">
+                  <div>
+                    <strong>{ct.name}</strong>
+                    <span style={{ color: "#8b949e", fontSize: "0.8rem", marginLeft: "0.5rem" }}>
+                      {ct.keywords.join(", ")}
+                    </span>
+                  </div>
+                  <button className="btn-danger btn-sm" onClick={() => handleDeleteTrack(ct)}>
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Seeds panel */}
       {showSeeds && (

@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from enum import Enum
 
 
 class Track(str, Enum):
+    """Built-in tracks. Kept as reference; API accepts any string track name."""
     BACKEND = "Backend"
     FRONTEND = "Frontend"
     FULLSTACK = "Fullstack"
@@ -12,6 +13,10 @@ class Track(str, Enum):
     ML = "ML"
     AI_AGENT = "AI Agent"
     CONSULTING = "Consulting"
+    PRODUCT_MANAGER = "Product Manager"
+
+
+BUILTIN_TRACK_NAMES: set[str] = {t.value for t in Track}
 
 
 class PostedWithin(str, Enum):
@@ -73,7 +78,7 @@ class SeedResponse(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
-    track: Optional[Track] = None
+    track: Optional[str] = None
     locations: Optional[list[str]] = None
     seniority: Optional[str] = None
     posted_within: Optional[PostedWithin] = None
@@ -93,7 +98,7 @@ class ProfileResponse(BaseModel):
 
 
 class SearchRunCreate(BaseModel):
-    track: Track
+    track: str = Field(..., min_length=1, max_length=50)
     posted_within: PostedWithin = PostedWithin.D7
     provider_enabled: dict[str, bool] = Field(default_factory=lambda: {"greenhouse": True, "lever": True})
     limit_per_provider: int = Field(default=50, ge=1, le=200)
@@ -158,14 +163,14 @@ class QueueItemResponse(BaseModel):
 # --- Subscription / Alert models ---
 
 class SubscriptionCreate(BaseModel):
-    track: Track
+    track: str = Field(..., min_length=1, max_length=50)
     experience_level: Optional[ExperienceLevel] = None
     location_filter: Optional[str] = None
     interval_minutes: int = Field(default=60, ge=15, le=1440)
 
 
 class SubscriptionUpdate(BaseModel):
-    track: Optional[Track] = None
+    track: Optional[str] = Field(default=None, min_length=1, max_length=50)
     experience_level: Optional[ExperienceLevel] = None
     location_filter: Optional[str] = None
     interval_minutes: Optional[int] = Field(default=None, ge=15, le=1440)
@@ -198,4 +203,33 @@ class SummaryResponse(BaseModel):
     job_id: str
     summary_text: str
     model_name: str
+    created_at: str
+
+
+# --- Custom Track models ---
+
+class CustomTrackCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    keywords: list[str] = Field(..., min_length=1)
+
+    @field_validator("name")
+    @classmethod
+    def name_not_builtin(cls, v: str) -> str:
+        if v in BUILTIN_TRACK_NAMES or v.lower() in {t.lower() for t in BUILTIN_TRACK_NAMES}:
+            raise ValueError(f"'{v}' is a built-in track and cannot be used as a custom track name")
+        return v.strip()
+
+    @field_validator("keywords")
+    @classmethod
+    def clean_keywords(cls, v: list[str]) -> list[str]:
+        cleaned = [kw.strip().lower() for kw in v if kw.strip()]
+        if not cleaned:
+            raise ValueError("At least one non-empty keyword is required")
+        return cleaned
+
+
+class CustomTrackResponse(BaseModel):
+    id: str
+    name: str
+    keywords: list[str]
     created_at: str
